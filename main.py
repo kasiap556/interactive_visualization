@@ -98,10 +98,10 @@ def rysuj_wykres(kraj):
 
     texts = []
     for pop, t, (name, *_), p in zip(populacje, temps, cities, pm25):
-        offset = max(pm25) * 0.1
-        texts.append(ax.text(pop, t + offset, name, fontsize=10,
-                             bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.7, edgecolor="gray"),
-                             ha='center'))
+        ax.text(pop + 0.05, t + 0.05, name,
+                fontsize=10,
+                ha='center',
+                va='bottom')
 
     adjust_text(texts, ax=ax, arrowprops=dict(arrowstyle="->", color='gray', lw=0.5))
 
