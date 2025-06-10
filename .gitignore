@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Jupyter Notebook checkpoints (if used)
+.ipynb_checkpoints/
+
+# macOS / Linux
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Log files
+*.log
+
+# Matplotlib GUI backends
+.matplotlib/
+
+# JSON output files (e.g. data saved by your app)
+*.json
+
+# Cache files
+*.cache
+
+# Tkinter window screenshots or temp images (if any)
+*.png
+*.jpg
+*.jpeg
+
+# Others
+*.bak
+*.tmp
