@@ -12,29 +12,25 @@ API_KEY = "fa8affeb2df4221f0806768ba77b95ec"
 
 kraje_miasta = {
     "Polska": [("Warszawa", 1_800_000, 52.2297, 21.0122), ("Kraków", 780_000, 50.0647, 19.9450),
-               ("Łódź", 670_000, 51.7592, 19.4560), ("Wrocław", 640_000, 51.1079, 17.0385),
-               ("Poznań", 540_000, 52.4064, 16.9252)],
+               ("Łódź", 670_000, 51.7592, 19.4560), ("Wrocław", 640_000, 51.1079, 17.0385), ("Poznań", 540_000, 52.4064, 16.9252)],
     "Niemcy": [("Dortmund", 1_900_000, 51.5136, 7.4653), ("Essen", 1_900_000, 51.4556, 7.0116),
-                ("Lipsk", 1_200_000, 51.3397, 12.3731), ("Kolonia", 1_100_000, 50.9375, 6.9603),
-                ("Frankfurt", 750_000, 50.1109, 8.6821)],
+               ("Lipsk", 1_200_000, 51.3397, 12.3731), ("Kolonia", 1_100_000, 50.9375, 6.9603), ("Frankfurt", 750_000, 50.1109, 8.6821)],
     "Francja": [("Marsylia", 860_000, 43.2965, 5.3698), ("Lyon", 520_000, 45.7640, 4.8357),
-               ("Tuluza", 480_000, 43.6047, 1.4442), ("Nicea", 340_000, 43.7102, 7.2620),
-               ("Nantes", 1_000_000, 47.2184, -1.5536)],
+                ("Tuluza", 480_000, 43.6047, 1.4442), ("Nicea", 340_000, 43.7102, 7.2620), ("Nantes", 1_000_000, 47.2184, -1.5536)],
     "Hiszpania": [("Barcelona", 1_600_000, 41.3851, 2.1734), ("Walencja", 800_000, 39.4699, -0.3763),
-              ("Sewilla", 700_000, 37.3891, -5.9845), ("Saragossa", 675_000, 41.6488, -0.8891),
-              ("Bilbao", 1_000_000, 43.2630, -2.9350)],
+                  ("Sewilla", 700_000, 37.3891, -5.9845), ("Saragossa", 675_000, 41.6488, -0.8891), ("Bilbao", 1_000_000, 43.2630, -2.9350)],
     "Włochy": [("Mediolan", 1_350_000, 45.4642, 9.1900), ("Neapol", 970_000, 40.8518, 14.2681),
-              ("Turyn", 870_000, 45.0703, 7.6869), ("Palermo", 660_000, 38.1157, 13.3615),
-              ("Florencja", 380_000, 43.7696, 11.2558)]
+               ("Turyn", 870_000, 45.0703, 7.6869), ("Palermo", 660_000, 38.1157, 13.3615), ("Florencja", 380_000, 43.7696, 11.2558)]
 }
 
-def pobierz_temperature(lat, lon):
+
+def get_temp(lat, lon):
     return requests.get(
         f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}"
         f"&appid={API_KEY}&units=metric"
     ).json()["main"]["temp"]
 
-def pobierz_pm25(lat, lon):
+def get_pm25(lat, lon):
     return requests.get(
         f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}"
         f"&appid={API_KEY}"
@@ -57,19 +53,21 @@ hover_annotation = None
 
 colors = sns.color_palette("hls", len(kraje_miasta))
 
-################################
+###### online/offline
 use_api = True
 
 
 def plot():
+    global country_plots, alpha_values, text_labels
+
     ax.clear()
     ax.xaxis.set_major_locator(ticker.MultipleLocator(100_000))
     ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
     ax.grid(True, alpha=0.1)
 
-    country_plots.clear()
-    alpha_values.clear()
-    text_labels.clear()
+    country_plots = {}
+    alpha_values = {}
+    text_labels = {}
 
     all_data_to_save = []
 
@@ -82,8 +80,8 @@ def plot():
             names = []
 
             for city, population, lat, lon in cities:
-                t = pobierz_temperature(lat, lon)
-                p = pobierz_pm25(lat, lon)
+                t = get_temp(lat, lon)
+                p = get_pm25(lat, lon)
                 populations.append(population)
                 temps.append(t)
                 pm25s.append(p)
@@ -102,13 +100,8 @@ def plot():
             alpha_values[country] = 0.6
 
             scatter = ax.scatter(
-                populations, temps,
-                s=[p * 15 for p in pm25s],
-                label=country,
-                alpha=0.7,
-                color=color,
-                edgecolor='black',
-                linewidth=0.5
+                populations, temps, s=[p * 15 for p in pm25s], label=country, alpha=0.7,
+                color=color, edgecolor='black', linewidth=0.5
             )
 
             labels = []
@@ -116,22 +109,37 @@ def plot():
                 txt = ax.text(populations[i], temps[i] + 0.35, city[0], fontsize=8, ha='center', alpha=0.7)
                 labels.append(txt)
 
-            country_plots[country] = {"scatter": scatter, "data": list(zip(populations, temps, names, pm25s)), "color": color}
+            country_plots[country] = {"scatter": scatter, "data": list(zip(populations, temps, names, pm25s)),
+                                      "color": color}
             text_labels[country] = labels
 
         now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"all_cities_data_{now}.json"
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(all_data_to_save, f, indent=2, ensure_ascii=False)
-
+######################
     else:
-        filename = "all_cities_data.json"
+        filename = "all_cities_data_2025-06-11_21-54-25.json"  # 06-11 21:54
+        # filename = "all_cities_data_2025-06-17_14-59-06.json"  # 06-17 14:59
+        # filename = "all_cities_data_2025-06-17_22-31-44.json"  # 06-17 22:31
         if not os.path.exists(filename):
             print(f"Plik {filename} nie istnieje! Najpierw wygeneruj dane z API.")
             return
 
         with open(filename, "r", encoding="utf-8") as f:
             all_data_to_save = json.load(f)
+
+        country_mapping = {
+            "Poland": "Polska",
+            "Germany": "Niemcy",
+            "France": "Francja",
+            "Spain": "Hiszpania",
+            "Italy": "Włochy"
+        }
+
+        for d in all_data_to_save:
+            if d["country"] in country_mapping:
+                d["country"] = country_mapping[d["country"]]
 
         data_by_country = {}
         for d in all_data_to_save:
@@ -140,45 +148,59 @@ def plot():
                 data_by_country[country] = []
             data_by_country[country].append(d)
 
-        for idx, (country, data_list) in enumerate(data_by_country.items()):
-            color = colors[idx]
-            populations = [d["population"] for d in data_list]
-            temps = [d["temperature"] for d in data_list]
-            pm25s = [d["pm2_5"] for d in data_list]
-            names = [d["city"] for d in data_list]
+        for idx, country in enumerate(kraje_miasta.keys()):
+            if country in data_by_country:
+                data_list = data_by_country[country]
+                color = colors[idx]
+                populations = [d["population"] for d in data_list]
+                temps = [d["temperature"] for d in data_list]
+                pm25s = [d["pm2_5"] for d in data_list]
+                names = [d["city"] for d in data_list]
 
-            alpha_values[country] = 0.6
+                alpha_values[country] = 0.6
 
-            scatter = ax.scatter(
-                populations, temps,
-                s=[p * 15 for p in pm25s],
-                label=country,
-                alpha=0.7,
-                color=color,
-                edgecolor='black',
-                linewidth=0.5
-            )
+                scatter = ax.scatter(
+                    populations, temps,
+                    s=[p * 15 for p in pm25s],
+                    label=country,
+                    alpha=0.7,
+                    color=color,
+                    edgecolor='black',
+                    linewidth=0.5
+                )
 
-            labels = []
-            for i, name in enumerate(names):
-                txt = ax.text(populations[i], temps[i], name, fontsize=8, ha='center', alpha=0.7)
-                labels.append(txt)
+                labels = []
+                for i, name in enumerate(names):
+                    txt = ax.text(populations[i], temps[i] + 0.35, name, fontsize=8, ha='center', alpha=0.7)
+                    labels.append(txt)
 
-            country_plots[country] = {"scatter": scatter, "data": list(zip(populations, temps, names, pm25s)), "color": color}
-            text_labels[country] = labels
-
-    ax.set_xlabel("Liczba mieszkańców")
+                country_plots[country] = {"scatter": scatter, "data": list(zip(populations, temps, names, pm25s)),
+                                          "color": color}
+                text_labels[country] = labels
+            else:
+                print(f"Brak danych dla kraju: {country}")
+######################
+    ax.set_xlabel("Liczba mieszkańców (mln)")
     ax.set_ylabel("Temperatura (°C)")
     ax.set_title("Wpływ populacji i temperatury na PM2.5")
-    legend_elements = [plt.Line2D([0], [0], marker='o', color='w',
-                                  label=country, markerfacecolor=country_plots[country]["color"],
-                                  markersize=10) for country in alpha_values]
-    ax.legend(handles=legend_elements, title="Kraj", fontsize=8)
+
+    if country_plots:
+        legend_elements = [plt.Line2D([0], [0], marker='o', color='w',
+                                      label=country, markerfacecolor=country_plots[country]["color"],
+                                      markersize=10) for country in country_plots]
+        ax.legend(handles=legend_elements, title="Kraj", fontsize=8)
+    else:
+        print("Brak danych do wyświetlenia!")
+
     fig.tight_layout()
     canvas.draw()
 
 
 def toggle_alpha(kraj):
+    if kraj not in country_plots:
+        print(f"Brak danych dla kraju: {kraj}")
+        return
+
     scatter_obj = country_plots[kraj]["scatter"]
     new_alpha = 0.1 if alpha_values[kraj] == 0.6 else 0.6
     scatter_obj.set_alpha(new_alpha)
@@ -187,9 +209,14 @@ def toggle_alpha(kraj):
     alpha_values[kraj] = new_alpha
     canvas.draw()
 
+
+for widget in frame_buttons.winfo_children():
+    widget.destroy()
+
 for kraj in kraje_miasta.keys():
     btn = tk.Button(frame_buttons, text=kraj, command=lambda c=kraj: toggle_alpha(c))
     btn.pack(side=tk.LEFT, padx=5, pady=5)
+
 
 def motion(event):
     global hover_annotation
@@ -226,11 +253,11 @@ def motion(event):
                 offset_y = -approx_height - margin
 
             hover_annotation = ax.annotate(
-                f"{name}\nPopulacja: {pop:,}\nTemperatura: {temp:.1f}°C\nPM2.5: {pm:.1f}",
-                xy=(pop, temp), xycoords='data',
-                xytext=(offset_x, offset_y), textcoords='offset points',
-                bbox=dict(boxstyle="round,pad=0.3", fc="white", alpha=0.6),
-                fontsize=8
+                f"{name}\nPopulacja: {pop:,}\nTemperatura: {temp:.1f}°C\nPM2.5: {pm:.2f}",
+                xy=(pop, temp), xytext=(offset_x, offset_y), textcoords="offset points",
+                bbox=dict(boxstyle="round", fc="w", ec="gray", alpha=0.9),
+                arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.2"),
+                fontsize=9
             )
             canvas.draw()
             return
