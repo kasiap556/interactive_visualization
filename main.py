@@ -121,9 +121,9 @@ def plot():
     else:
         filename = "all_cities_data_2025-06-11_21-54-25.json"  # 06-11 21:54
         # filename = "all_cities_data_2025-06-17_14-59-06.json"  # 06-17 14:59
-        # filename = "all_cities_data_2025-06-17_22-31-44.json"  # 06-17 22:31
+        # filename = "all_cities_data_2025-06-17_22-47-24.json"  # 06-17 22:47
         if not os.path.exists(filename):
-            print(f"Plik {filename} nie istnieje! Najpierw wygeneruj dane z API.")
+            print(f"Plik {filename} nie istnieje (znając życie pomyliłaś nazwę xd)")
             return
 
         with open(filename, "r", encoding="utf-8") as f:
@@ -190,7 +190,7 @@ def plot():
                                       markersize=10) for country in country_plots]
         ax.legend(handles=legend_elements, title="Kraj", fontsize=8)
     else:
-        print("Brak danych do wyświetlenia!")
+        print("Brak danych do wyświetlenia")
 
     fig.tight_layout()
     canvas.draw()
@@ -266,7 +266,6 @@ def motion(event):
         hover_annotation.remove()
         hover_annotation = None
         canvas.draw()
-
 
 canvas.mpl_connect("motion_notify_event", motion)
 plot()
